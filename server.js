@@ -4,6 +4,29 @@ const { graphqlHTTP } = require('express-graphql');
 const axios = require('axios');
 const app = express();
 
+var sql = require('mssql/msnodesqlv8');
+var config = {
+  connectionString:
+    'Driver=SQL Server;Server=DESKTOP-9KKSAP5\\SQLEXPRESS;Database=graphql;Trusted_Connection=true;',
+};
+sql.connect(config, err => {
+  new sql.Request().query('SELECT * from users', (err, result) => {
+    console.log('.:The Good Place:.');
+    if (err) {
+      // SQL error, but connection OK.
+      console.log('  Shirtballs: ' + err);
+    } else {
+      // All is rosey in your garden.
+      console.dir(result);
+    }
+  });
+});
+sql.on('error', err => {
+  // Connection borked.
+  console.log('.:The Bad Place:.');
+  console.log('  Fork: ' + err);
+});
+
 let message = 'this is a message';
 const schema = buildSchema(`
 
@@ -22,6 +45,7 @@ type User{
   age: Int
   college: String
 }
+
 type Query{
   hello: String
   welcomeMessage(name: String, dayOfWeek: String!): String
@@ -30,11 +54,13 @@ type Query{
   getPostsFromExternalAPI: [Post]
   message: String
 }
+
 input UserInput{
   name: String!
   age: Int!
   college:String!
 }
+
 type Mutation{
   setMessage(newMessage : String): String
   createUser(user:UserInput): User
@@ -45,10 +71,12 @@ const root = {
   hello: () => {
     return 'Hello world!';
   },
+
   welcomeMessage: args => {
     console.log(args);
     return `Hey ${args.name}, hows life? today is ${args.dayOfWeek}`;
   },
+
   getUser: () => {
     const user = {
       name: 'dana shotland',
@@ -57,6 +85,7 @@ const root = {
     };
     return user;
   },
+
   getUsers: () => {
     const users = [
       {
@@ -77,21 +106,25 @@ const root = {
     ];
     return users;
   },
+
   getPostsFromExternalAPI: async () => {
     return axios
       .get('https://dummyjson.com/products/')
       .then(result => result.data.products);
   },
+
   setMessage: ({ newMessage }) => {
     message = newMessage;
     return message;
   },
+
   message: () => message,
   createUser: args => {
     console.log(args);
     return args.user;
   },
 };
+
 app.use(
   '/graphql',
   graphqlHTTP({
