@@ -3,7 +3,8 @@ const { buildSchema } = require('graphql');
 const { graphqlHTTP } = require('express-graphql');
 const axios = require('axios');
 const app = express();
-
+let obj=null;
+/*https://stackoverflow.com/questions/33709807/how-to-connect-to-sql-server-with-windows-authentication-from-node-js-using-mssq*/
 var sql = require('mssql/msnodesqlv8');
 var config = {
   connectionString:
@@ -18,6 +19,7 @@ sql.connect(config, err => {
     } else {
       // All is rosey in your garden.
       console.dir(result);
+      obj=result.recordset;
     }
   });
 });
@@ -53,6 +55,7 @@ type Query{
   getUsers: [User]
   getPostsFromExternalAPI: [Post]
   message: String
+  getStudents: [User]
 }
 
 input UserInput{
@@ -111,6 +114,10 @@ const root = {
     return axios
       .get('https://dummyjson.com/products/')
       .then(result => result.data.products);
+  },
+
+  getStudents:()=>{
+    return obj;
   },
 
   setMessage: ({ newMessage }) => {
